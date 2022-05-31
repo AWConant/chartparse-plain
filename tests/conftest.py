@@ -1,3 +1,4 @@
+import math
 import pytest
 
 from chart_intensity_rater.eventstrack import Events, EventsEvent
@@ -83,3 +84,37 @@ def parse_events_from_iterable_side_effect(iterable, event_type):
         return _default_bpm_event_list
     elif event_type is EventsEvent:
         return _default_events_event_list
+
+
+@pytest.fixture
+def generate_valid_bpm_line():
+    return generate_valid_bpm_line_fn
+
+
+def generate_valid_bpm_line_fn(tick=_default_tick, bpm=_default_bpm):
+    bpm_sans_decimal_point = int(bpm*1000)
+    if bpm_sans_decimal_point != bpm*1000:
+        raise ValueError(f"bpm {bpm} has more than 3 decimal places")
+    return f"  {tick} = B {bpm_sans_decimal_point}"
+
+
+@pytest.fixture
+def generate_valid_long_time_signature_line():
+    def generate_valid_long_time_signature_line_fn():
+        return generate_valid_time_signature_line_fn(lower_numeral=_default_lower_time_signature_numeral)
+    return generate_valid_long_time_signature_line_fn
+
+
+@pytest.fixture
+def generate_valid_short_time_signature_line():
+    return generate_valid_time_signature_line_fn
+
+
+def generate_valid_time_signature_line_fn(
+        tick=_default_tick,
+        upper_numeral=_default_upper_time_signature_numeral,
+        lower_numeral=None):
+    if lower_numeral:
+        return f"  {tick} = TS {upper_numeral} {int(math.log(lower_numeral, 2))}"
+    else:
+        return f"  {tick} = TS {upper_numeral}"
