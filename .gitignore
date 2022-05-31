@@ -1,0 +1,6 @@
+.coverage
+*.sw?
+env/
+__pycache__/
+
+*.chart
