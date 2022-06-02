@@ -4,3 +4,5 @@ env/
 __pycache__/
 
 *.chart
+
+chart_intensity_rater/nocover/
