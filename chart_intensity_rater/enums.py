@@ -91,3 +91,20 @@ class Note(enum.Enum):
     ORANGE                       = bytearray((0, 0, 0, 0, 1))
 
 
+class NoteTrackIndex(AllValuesGettableEnum):
+    G      = 0
+    R      = 1
+    Y      = 2
+    B      = 3
+    O      = 4
+    P      = 7
+    FORCED = 5
+    TAP    = 6
+    # Aliases
+    GREEN  = 0
+    RED    = 1
+    YELLOW = 2
+    BLUE   = 3
+    ORANGE = 4
+    OPEN   = 7
+

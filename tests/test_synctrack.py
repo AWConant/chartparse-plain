@@ -6,10 +6,9 @@ from chart_intensity_rater.synctrack import BPMEvent, TimeSignatureEvent, SyncTr
 
 
 class TestSyncTrack(object):
-    def test_init(self, mock_parse_events_from_iterable, iterator_getter):
-        sync_track = SyncTrack(iterator_getter)
-        assert sync_track.time_signature_events == pytest.default_time_signature_event_list
-        assert sync_track.bpm_events == pytest.default_bpm_event_list
+    def test_init(self, sync_track_invalid_lines):
+        assert sync_track_invalid_lines.time_signature_events == pytest.default_time_signature_event_list
+        assert sync_track_invalid_lines.bpm_events == pytest.default_bpm_event_list
 
 
 class TestTimeSignatureEvent(object):

@@ -9,6 +9,7 @@ from chart_intensity_rater.properties import Properties
 from chart_intensity_rater.synctrack import SyncTrack
 
 
+# TODO: Unit test this.
 class Chart(object):
     _required_sections = ("Song", "SyncTrack")
     _instrument_track_name_to_instrument_difficulty_pair = {

@@ -6,6 +6,7 @@ import chart_intensity_rater.track
 from chart_intensity_rater.enums import Note
 from chart_intensity_rater.exceptions import RegexFatalNotMatchError
 from chart_intensity_rater.tick import TickEvent
+from chart_intensity_rater.util import DictPropertiesEqMixin
 
 
 _min_note_instrument_track_index = 0
@@ -21,7 +22,7 @@ class InstrumentTrack(object):
         self.difficulty = difficulty
         self.note_events = self._parse_note_events_from_iterable(iterator_getter())
         self.star_power_events = chart_intensity_rater.track.parse_events_from_iterable(
-                iterator_getter(), StarPowerEvent)
+                iterator_getter(), StarPowerEvent.from_chart_line)
 
     def __str__(self):  # pragma: no cover
         return (
@@ -33,7 +34,7 @@ class InstrumentTrack(object):
     @staticmethod
     def _parse_note_events_from_iterable(iterable):
         tick_to_note_array = collections.defaultdict(lambda: bytearray(5))
-        tick_to_duration_list = collections.defaultdict(lambda: [0]*5)
+        tick_to_duration_list = collections.defaultdict(lambda: [None]*5)
         tick_to_is_tap = collections.defaultdict(bool)
         tick_to_is_forced = collections.defaultdict(bool)
         for line in iterable:
@@ -48,26 +49,22 @@ class InstrumentTrack(object):
                 tick_to_is_tap[tick] = True
             elif note_index == _forced_instrument_track_index:
                 tick_to_is_forced[tick] = True
-            else:
+            else:  # pragma: no cover
                 # TODO: Log unhandled instrument track note index.
                 pass
-
-        def all_same(durations):
-            return durations.count(durations[0]) == len(durations)
 
         events = []
         for tick in tick_to_note_array.keys():
             note = Note(tick_to_note_array[tick])
-            duration_list = tick_to_duration_list[tick]
-            duration = duration_list[0] if all_same(duration_list) else duration_list
-            event = NoteEvent(tick, note, duration, tick_to_is_forced[tick], tick_to_is_tap[tick])
+            event = NoteEvent(
+                    tick, note, tick_to_duration_list[tick], tick_to_is_forced[tick], tick_to_is_tap[tick])
             events.append(event)
         events.sort(key=lambda e: e.tick)
 
         return events
 
 
-class NoteEvent(TickEvent):
+class NoteEvent(TickEvent, DictPropertiesEqMixin):
     # This regex matches a single "N" line within a instrument track section,
     # but this class should be used to represent all of the notes at a
     # particular tick. This means that you might need to consolidate multiple
@@ -78,17 +75,53 @@ class NoteEvent(TickEvent):
     _regex = r"^\s*?(\d+?)\s=\sN\s([0-7])\s(\d+?)\s*?$"
     _regex_prog = re.compile(_regex)
 
-    def __init__(self, tick, note, duration=None, is_forced=False, is_tap=False):
+    def __init__(self, tick, note, duration=0, is_forced=False, is_tap=False):
+        self._validate_duration(duration, note)
         super().__init__(tick)
         self.note = note
-        # duration can be either integer or tuple(5). tuple is for ticks with
-        # notes of independent durations.
-        self.duration = duration if duration else 0
+        self.duration = self._refine_duration(duration)
         self.is_forced = is_forced
         self.is_tap = is_tap
 
+    @staticmethod
+    def _validate_duration(duration, note):
+        if isinstance(duration, int):
+            NoteEvent._validate_int_duration(duration)
+        elif isinstance(duration, list):
+            NoteEvent._validate_list_duration(duration, note)
+        else:
+            raise TypeError(f"duration {duration} must be type list, or int.")
+
+    @staticmethod
+    def _validate_int_duration(duration):
+        if duration < 0:
+            raise ValueError(f"int duration {duration} must be positive.")
+
+    @staticmethod
+    def _validate_list_duration(duration, note):
+        if len(duration) != len(note.value):
+            raise ValueError(f"list duration {duration} must have length {len(note.value)}")
+        for note_lane_value, duration_lane_value in zip(note.value, duration):
+            lane_is_active = note_lane_value == 1
+            duration_is_set = duration_lane_value is not None
+            if lane_is_active != duration_is_set:
+                raise ValueError(f"list duration {duration} must have "
+                                  "values for exactly the active note lanes.")
+
+    @staticmethod
+    def _refine_duration(duration):
+        if isinstance(duration, list):
+            if all(d is None for d in duration):
+                return 0
+            first_non_none_duration = next(d for d in duration if d is not None)
+            if all(d is None or d == first_non_none_duration for d in duration):
+                return first_non_none_duration
+        return duration
+
     def __str__(self):  # pragma: no cover
         to_join = [f"{type(self).__name__}(t@{self.tick:07}: {self.note}"]
+        if self.duration:
+            to_join.append(f" duration={self.duration}")
         flags = []
         if self.is_forced:
             flags.append("F")
@@ -103,7 +136,7 @@ class NoteEvent(TickEvent):
         return str(self.__dict__)
 
 
-class StarPowerEvent(TickEvent):
+class StarPowerEvent(TickEvent, DictPropertiesEqMixin):
     # Match 1: Tick
     # Match 2: Note index (Might be always 2? Not sure what this is, to be honest.)
     # Match 3: Duration (ticks)
@@ -121,3 +154,20 @@ class StarPowerEvent(TickEvent):
             raise RegexFatalNotMatchError(cls._regex, line)
         tick, duration = int(m.group(1)), int(m.group(3))
         return cls(tick, duration)
+
+    def __str__(self):  # pragma: no cover
+        to_join = [f"{type(self).__name__}(t@{self.tick:07}: {self.note}"]
+        flags = []
+        if self.is_forced:
+            flags.append("F")
+        if self.is_tap:
+            flags.append("T")
+        if flags:
+            to_join.extend([" [flags=", ''.join(flags), "]"])
+        to_join.append(')')
+        return ''.join(to_join)
+
+    def __repr__(self):  # pragma: no cover
+        return str(self.__dict__)
+
+

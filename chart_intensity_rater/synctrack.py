@@ -4,16 +4,20 @@ import chart_intensity_rater.track
 
 from chart_intensity_rater.exceptions import RegexFatalNotMatchError
 from chart_intensity_rater.tick import TickEvent
+from chart_intensity_rater.util import DictPropertiesEqMixin
 
 
 class SyncTrack(object):
     def __init__(self, iterator_getter):
         self.time_signature_events = chart_intensity_rater.track.parse_events_from_iterable(
-                iterator_getter(), TimeSignatureEvent)
-        self.bpm_events = chart_intensity_rater.track.parse_events_from_iterable(iterator_getter(), BPMEvent)
+                iterator_getter(), TimeSignatureEvent.from_chart_line)
+        self.bpm_events = chart_intensity_rater.track.parse_events_from_iterable(
+                iterator_getter(), BPMEvent.from_chart_line)
+        # TODO: Validate that there is a time signature event at tick 0.
+        # TODO: Validate that there is a BPM event at tick 0.
 
 
-class TimeSignatureEvent(TickEvent):
+class TimeSignatureEvent(TickEvent, DictPropertiesEqMixin):
     # Match 1: Tick
     # Match 2: Upper numeral
     # Match 3: Lower numeral (optional; assumed to be 4 if absent)

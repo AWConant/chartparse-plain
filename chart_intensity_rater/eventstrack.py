@@ -4,14 +4,16 @@ import chart_intensity_rater.track
 
 from chart_intensity_rater.exceptions import RegexFatalNotMatchError
 from chart_intensity_rater.tick import TickEvent
+from chart_intensity_rater.util import DictPropertiesEqMixin
 
 
 class Events(object):
     def __init__(self, iterator_getter):
-        self.events = chart_intensity_rater.track.parse_events_from_iterable(iterator_getter(), EventsEvent)
+        self.events = chart_intensity_rater.track.parse_events_from_iterable(
+                iterator_getter(), EventsEvent.from_chart_line)
 
 
-class EventsEvent(TickEvent):
+class EventsEvent(TickEvent, DictPropertiesEqMixin):
     # Match 1: Tick
     # Match 2: Event command
     # Match 3: Event parameters (optional)
