@@ -20,7 +20,7 @@ def main():
         print(e)
     for e in c.sync_track.time_signature_events[:5]:
         print(e)
-    for e in c.sync_track.bpm_events[:5]:
+    for e in c.sync_track.bpm_events[:10]:
         print(e)
     for e in c.events_track.events[:5]:
         print(e)

@@ -1,31 +1,35 @@
 import re
 
+import chart_intensity_rater.event
 import chart_intensity_rater.track
 
 from chart_intensity_rater.exceptions import RegexFatalNotMatchError
-from chart_intensity_rater.tick import TickEvent
+from chart_intensity_rater.event import Event
 from chart_intensity_rater.util import DictPropertiesEqMixin
 
 
-class SyncTrack(object):
+class SyncTrack(DictPropertiesEqMixin):
     def __init__(self, iterator_getter):
         self.time_signature_events = chart_intensity_rater.track.parse_events_from_iterable(
                 iterator_getter(), TimeSignatureEvent.from_chart_line)
+        if self.time_signature_events[0].tick != 0:
+            raise ValueError(f"first TimeSignatureEvent {self.time_signature_events[0]} must have tick 0")
+
         self.bpm_events = chart_intensity_rater.track.parse_events_from_iterable(
                 iterator_getter(), BPMEvent.from_chart_line)
-        # TODO: Validate that there is a time signature event at tick 0.
-        # TODO: Validate that there is a BPM event at tick 0.
+        if self.bpm_events[0].tick != 0:
+            raise ValueError(f"first BPMEvent {self.bpm_events[0]} must have tick 0")
 
 
-class TimeSignatureEvent(TickEvent, DictPropertiesEqMixin):
+class TimeSignatureEvent(Event, DictPropertiesEqMixin):
     # Match 1: Tick
     # Match 2: Upper numeral
     # Match 3: Lower numeral (optional; assumed to be 4 if absent)
     _regex = r"^\s\s(\d+?)\s=\sTS\s(\d+?)(?:\s(\d+?))?$"
     _regex_prog = re.compile(_regex)
 
-    def __init__(self, tick, upper_numeral, lower_numeral):
-        super().__init__(tick)
+    def __init__(self, tick, upper_numeral, lower_numeral, timestamp=None):
+        super().__init__(tick, timestamp=timestamp)
         self.upper_numeral = upper_numeral
         self.lower_numeral = lower_numeral
 
@@ -40,21 +44,23 @@ class TimeSignatureEvent(TickEvent, DictPropertiesEqMixin):
         lower_numeral = 2**int(m.group(3)) if m.group(3) else 4
         return cls(tick, upper_numeral, lower_numeral)
 
-    def __str__(self):
-        return f"{type(self).__name__}(t@{self.tick:07}: {self.upper_numeral}/{self.lower_numeral})"  # pragma: no cover
+    def __str__(self):  # pragma: no cover
+        to_join = [super().__str__()]
+        to_join.append(f": {self.upper_numeral}/{self.lower_numeral}")
+        return ''.join(to_join)
 
     def __repr__(self):
         return str(self.__dict__)  # pragma: no cover
 
 
-class BPMEvent(TickEvent):
+class BPMEvent(Event):
     # Match 1: Tick
     # Match 2: BPM (the last 3 digits are the decimal places)
     _regex = r"^\s*?(\d+?)\s=\sB\s(\d+?)\s*?$"
     _regex_prog = re.compile(_regex)
 
-    def __init__(self, tick, bpm):
-        super().__init__(tick)
+    def __init__(self, tick, bpm, timestamp=None):
+        super().__init__(tick, timestamp=timestamp)
         self.bpm = bpm
 
     @classmethod
@@ -69,8 +75,10 @@ class BPMEvent(TickEvent):
         bpm = bpm_whole_part + bpm_decimal_part
         return cls(tick, bpm)
 
-    def __str__(self):
-        return f"{type(self).__name__}(t@{self.tick:07}: {self.bpm})"  # pragma: no cover
+    def __str__(self):  # pragma: no cover
+        to_join = [super().__str__()]
+        to_join.append(f": {self.bpm} BPM")
+        return ''.join(to_join)
 
     def __repr__(self):
         return str(self.__dict__)  # pragma: no cover

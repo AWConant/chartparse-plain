@@ -6,9 +6,34 @@ from chart_intensity_rater.synctrack import BPMEvent, TimeSignatureEvent, SyncTr
 
 
 class TestSyncTrack(object):
-    def test_init(self, sync_track_invalid_lines):
-        assert sync_track_invalid_lines.time_signature_events == pytest.default_time_signature_event_list
-        assert sync_track_invalid_lines.bpm_events == pytest.default_bpm_event_list
+    def test_init(self, basic_sync_track):
+        assert basic_sync_track.time_signature_events == pytest.default_time_signature_event_list
+        assert basic_sync_track.bpm_events == pytest.default_bpm_event_list
+
+    def test_init_missing_first_time_signature_event(self, mocker, placeholder_string_iterator_getter):
+        mocker.patch(
+                'chart_intensity_rater.synctrack.chart_intensity_rater.track.parse_events_from_iterable',
+                return_value=[
+                    TimeSignatureEvent(
+                        1, pytest.default_upper_time_signature_numeral,
+                        pytest.default_lower_time_signature_numeral)])
+        with pytest.raises(ValueError):
+            _ = SyncTrack(placeholder_string_iterator_getter)
+
+    def test_init_missing_first_bpm_event(self, mocker, placeholder_string_iterator_getter):
+        def fake_parse_events_from_iterable(_, from_chart_line_fn):
+            event_type = from_chart_line_fn.__self__
+            if event_type is TimeSignatureEvent:
+                return pytest.default_time_signature_event_list
+            elif event_type is BPMEvent:
+                return [BPMEvent(1, pytest.default_bpm)]
+            else:
+                raise ValueError(f"event_type {event_type} not handled")
+        mocker.patch(
+                'chart_intensity_rater.synctrack.chart_intensity_rater.track.parse_events_from_iterable',
+                side_effect=fake_parse_events_from_iterable)
+        with pytest.raises(ValueError):
+            _ = SyncTrack(placeholder_string_iterator_getter)
 
 
 class TestTimeSignatureEvent(object):

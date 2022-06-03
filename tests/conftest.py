@@ -1,15 +1,18 @@
 import math
 import pytest
 
+from chart_intensity_rater.chart import Chart
 from chart_intensity_rater.enums import Instrument, Difficulty, Note
 from chart_intensity_rater.eventstrack import Events, EventsEvent
 from chart_intensity_rater.instrumenttrack import (
         InstrumentTrack, NoteEvent, StarPowerEvent, _min_note_instrument_track_index)
+from chart_intensity_rater.properties import Properties
 from chart_intensity_rater.synctrack import SyncTrack, BPMEvent, TimeSignatureEvent
-from chart_intensity_rater.tick import TickEvent
+from chart_intensity_rater.event import Event
 
+_default_filepath = "/not/a/real/path"
 
-_default_tick = 100
+_default_tick = 0
 
 _default_bpm = 120.000
 _default_bpm_event = BPMEvent(_default_tick, _default_bpm)
@@ -60,7 +63,7 @@ def generate_valid_time_signature_line_fn(
 _default_events_event_command = "test_command"
 _default_events_event_params = "test_param"
 _default_events_event = EventsEvent(
-        _default_tick, _default_events_event_command, _default_events_event_params)
+        _default_tick, _default_events_event_command, params=_default_events_event_params)
 _default_events_event_list = [_default_events_event]
 
 
@@ -108,6 +111,24 @@ _default_note_event_list = [_default_note_event]
 _default_star_power_event = StarPowerEvent(_default_tick, _default_duration)
 _default_star_power_event_list = [_default_star_power_event]
 
+_default_properties_fields = {
+        "name": "Song Name",
+        "artist": "Artist Name",
+        "charter": "Charter Name",
+        "album": "Album Name",
+        "year": "1999",
+        "offset": 0,
+        "resolution": 1,
+        "player2": "bass",
+        "difficulty": 2,
+        "preview_start": 3,
+        "preview_end": 4,
+        "genre": "rock",
+        "media_type": "cd",
+        "music_stream": "song.ogg",
+        "unknown_property": "unknown value",
+}
+
 
 @pytest.fixture
 def generate_valid_star_power_line():
@@ -119,6 +140,8 @@ def generate_valid_star_power_line_fn(tick=_default_tick, duration=_default_dura
 
 
 def pytest_configure():
+    pytest.default_filepath = _default_filepath
+
     pytest.default_tick = _default_tick
     pytest.default_duration = _default_duration
 
@@ -144,12 +167,17 @@ def pytest_configure():
 
 
 @pytest.fixture
+def mock_open_empty_string(mocker):
+    mocker.patch("builtins.open", mocker.mock_open(read_data=""))
+
+
+@pytest.fixture
 def invalid_chart_line():
     return "this_line_is_invalid"
 
 
 @pytest.fixture
-def garbage_string_iterator_getter(invalid_chart_line):
+def placeholder_string_iterator_getter(invalid_chart_line):
     return lambda: [invalid_chart_line]
 
 
@@ -159,9 +187,10 @@ def unmatchable_regex():
     return r"(?!x)x"
 
 
+# TODO: Rename to `event`.
 @pytest.fixture
 def tick_event():
-    return TickEvent(_default_tick)
+    return Event(_default_tick)
 
 
 @pytest.fixture
@@ -196,6 +225,13 @@ def star_power_event():
     return _default_star_power_event
 
 
+@pytest.fixture(params=[
+    'tick_event', 'time_signature_event', 'bpm_event', 'events_event',
+    'note_event', 'star_power_event'])
+def tick_having_event(request):
+    return request.getfixturevalue(request.param)
+
+
 # TODO: ... why does coverage care about this fixture?
 @pytest.fixture
 def note_lines():  # pragma: no cover
@@ -203,55 +239,67 @@ def note_lines():  # pragma: no cover
 
 
 @pytest.fixture
-def events_track_invalid_lines(mock_parse_events_from_iterable, garbage_string_iterator_getter):
-    return Events(garbage_string_iterator_getter)
+def basic_properties():
+    return Properties(_default_properties_fields)
 
 
 @pytest.fixture
-def sync_track_invalid_lines(mock_parse_events_from_iterable, garbage_string_iterator_getter):
-    return SyncTrack(garbage_string_iterator_getter)
+def basic_events_track(mocker, placeholder_string_iterator_getter):
+    mocker.patch(
+            'chart_intensity_rater.track.parse_events_from_iterable',
+            return_value=_default_events_event_list)
+    return Events(placeholder_string_iterator_getter)
 
 
 @pytest.fixture
-def instrument_track_invalid_lines(
-        mocker, mock_parse_events_from_iterable, garbage_string_iterator_getter):
+def basic_sync_track(mocker, placeholder_string_iterator_getter):
+    mocker.patch(
+            'chart_intensity_rater.track.parse_events_from_iterable',
+            side_effect=[_default_time_signature_event_list, _default_bpm_event_list])
+    return SyncTrack(placeholder_string_iterator_getter)
+
+
+@pytest.fixture
+def basic_instrument_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
             'chart_intensity_rater.instrumenttrack.InstrumentTrack._parse_note_events_from_iterable',
             return_value=pytest.default_note_event_list)
+    mocker.patch(
+            'chart_intensity_rater.track.parse_events_from_iterable',
+            return_value=_default_star_power_event_list)
     return InstrumentTrack(
-            pytest.default_instrument, pytest.default_difficulty, garbage_string_iterator_getter)
-
-
-@pytest.fixture(params=['tick_event', 'time_signature_event', 'bpm_event', 'events_event'])
-def tick_having_event(request):
-    return request.getfixturevalue(request.param)
+            pytest.default_instrument, pytest.default_difficulty, placeholder_string_iterator_getter)
 
 
 @pytest.fixture
-def mock_parse_events_from_iterable_with_return(mocker, request):  # pragma: no cover
-    return mocker.patch(
-            'chart_intensity_rater.track.parse_events_from_iterable',
-            return_value=request.param)
+def basic_chart(
+        mocker, mock_open_empty_string, placeholder_string_iterator_getter,
+        basic_properties, basic_sync_track, basic_events_track, basic_instrument_track):
+    def fake_sync_track_init(self, iterator_getter):
+        self.time_signature_events = _default_time_signature_event_list
+        self.bpm_events = _default_bpm_event_list
+    mocker.patch.object(SyncTrack, "__init__", fake_sync_track_init)
 
+    def fake_events_track_init(self, iterator_getter):
+        self.events = _default_events_event_list
+    mocker.patch.object(Events, "__init__", fake_events_track_init)
 
-@pytest.fixture
-def mock_parse_events_from_iterable(mocker):
-    return mocker.patch(
-            'chart_intensity_rater.track.parse_events_from_iterable',
-            side_effect=parse_events_from_iterable_side_effect)
+    def fake_instrument_track_init(self, instrument, difficulty, iterator_getter):
+        self.instrument = _default_instrument
+        self.difficulty = _default_difficulty
+        self.note_events = _default_note_event_list
+        self.star_power_events = _default_star_power_event_list
+    mocker.patch.object(InstrumentTrack, "__init__", fake_instrument_track_init)
 
-
-def parse_events_from_iterable_side_effect(iterable, from_chart_line_fn):  # pragma: no cover
-    event_type = from_chart_line_fn.__self__
-    if event_type is TimeSignatureEvent:
-        return _default_time_signature_event_list
-    elif event_type is BPMEvent:
-        return _default_bpm_event_list
-    elif event_type is EventsEvent:
-        return _default_events_event_list
-    elif event_type is NoteEvent:
-        return _default_note_event_list
-    elif event_type is StarPowerEvent:
-        return _default_star_power_event_list
-    else:
-        raise ValueError(f"event_type {event_type} not handled")
+    mocker.patch(
+            'chart_intensity_rater.chart.Chart._find_sections',
+            return_value={
+                "Song": placeholder_string_iterator_getter,
+                "Events": placeholder_string_iterator_getter,
+                "SyncTrack": placeholder_string_iterator_getter,
+                "ExpertSingle": placeholder_string_iterator_getter})
+    mocker.patch(
+            'chart_intensity_rater.properties.Properties.from_chart_lines',
+            return_value=basic_properties)
+    with open(_default_filepath, "r") as f:
+        return Chart(f)

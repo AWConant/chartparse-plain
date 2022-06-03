@@ -11,11 +11,11 @@ from tests.conftest import (
 
 
 class TestInstrumentTrack(object):
-    def test_init(self, mocker, instrument_track_invalid_lines):
-        assert instrument_track_invalid_lines.instrument == pytest.default_instrument
-        assert instrument_track_invalid_lines.difficulty == pytest.default_difficulty
-        assert instrument_track_invalid_lines.note_events == pytest.default_note_event_list
-        assert instrument_track_invalid_lines.star_power_events == pytest.default_star_power_event_list
+    def test_init(self, mocker, basic_instrument_track):
+        assert basic_instrument_track.instrument == pytest.default_instrument
+        assert basic_instrument_track.difficulty == pytest.default_difficulty
+        assert basic_instrument_track.note_events == pytest.default_note_event_list
+        assert basic_instrument_track.star_power_events == pytest.default_star_power_event_list
 
     @pytest.mark.parametrize(
         "lines, want_note_events, want_star_power_events",

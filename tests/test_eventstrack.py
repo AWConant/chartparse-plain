@@ -5,8 +5,8 @@ from chart_intensity_rater.exceptions import RegexFatalNotMatchError
 
 
 class TestEvents(object):
-    def test_init(self, events_track_invalid_lines):
-        assert events_track_invalid_lines.events == pytest.default_events_event_list
+    def test_init(self, basic_events_track):
+        assert basic_events_track.events == pytest.default_events_event_list
 
 
 class TestEventsEvent(object):
@@ -17,9 +17,6 @@ class TestEventsEvent(object):
     def test_from_chart_line(self, generate_valid_events_line):
 
         line = generate_valid_events_line(params=pytest.default_events_event_params)
-        print("FOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
-        print(line)
-        print("FOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOOO")
         event = EventsEvent.from_chart_line(line)
         assert event.tick == pytest.default_tick
         assert event.command == pytest.default_events_event_command

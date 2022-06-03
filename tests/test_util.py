@@ -2,7 +2,8 @@ import pytest
 
 from enum import Enum
 
-from chart_intensity_rater.util import AllValuesGettableEnum, DictPropertiesEqMixin
+from chart_intensity_rater.util import (
+        AllValuesGettableEnum, DictPropertiesEqMixin, iterate_from_second_elem)
 
 
 class TestAllValuesGettableEnum(object):
@@ -56,3 +57,9 @@ class TestDictPropertiesEqMixin(object):
         bar = self.Bar(1, 2)
         with pytest.raises(NotImplementedError):
             foo == bar
+
+class TestIterateFromSecondElem(object):
+    def test_basic(self):
+        xs = [3, 4, 2, 5]
+        for x1, x2 in zip(iterate_from_second_elem(xs), xs[1:]):
+            assert x1 == x2

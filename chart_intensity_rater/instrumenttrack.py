@@ -5,7 +5,7 @@ import chart_intensity_rater.track
 
 from chart_intensity_rater.enums import Note
 from chart_intensity_rater.exceptions import RegexFatalNotMatchError
-from chart_intensity_rater.tick import TickEvent
+from chart_intensity_rater.event import Event
 from chart_intensity_rater.util import DictPropertiesEqMixin
 
 
@@ -16,7 +16,7 @@ _forced_instrument_track_index   = 5
 _tap_instrument_track_index      = 6
 
 
-class InstrumentTrack(object):
+class InstrumentTrack(DictPropertiesEqMixin):
     def __init__(self, instrument, difficulty, iterator_getter):
         self.instrument = instrument
         self.difficulty = difficulty
@@ -57,14 +57,15 @@ class InstrumentTrack(object):
         for tick in tick_to_note_array.keys():
             note = Note(tick_to_note_array[tick])
             event = NoteEvent(
-                    tick, note, tick_to_duration_list[tick], tick_to_is_forced[tick], tick_to_is_tap[tick])
+                    tick, note, duration=tick_to_duration_list[tick],
+                    is_forced=tick_to_is_forced[tick], is_tap=tick_to_is_tap[tick])
             events.append(event)
         events.sort(key=lambda e: e.tick)
 
         return events
 
 
-class NoteEvent(TickEvent, DictPropertiesEqMixin):
+class NoteEvent(Event, DictPropertiesEqMixin):
     # This regex matches a single "N" line within a instrument track section,
     # but this class should be used to represent all of the notes at a
     # particular tick. This means that you might need to consolidate multiple
@@ -75,9 +76,9 @@ class NoteEvent(TickEvent, DictPropertiesEqMixin):
     _regex = r"^\s*?(\d+?)\s=\sN\s([0-7])\s(\d+?)\s*?$"
     _regex_prog = re.compile(_regex)
 
-    def __init__(self, tick, note, duration=0, is_forced=False, is_tap=False):
+    def __init__(self, tick, note, timestamp=None, duration=0, is_forced=False, is_tap=False):
         self._validate_duration(duration, note)
-        super().__init__(tick)
+        super().__init__(tick, timestamp=timestamp)
         self.note = note
         self.duration = self._refine_duration(duration)
         self.is_forced = is_forced
@@ -119,9 +120,11 @@ class NoteEvent(TickEvent, DictPropertiesEqMixin):
         return duration
 
     def __str__(self):  # pragma: no cover
-        to_join = [f"{type(self).__name__}(t@{self.tick:07}: {self.note}"]
+        to_join = [super().__str__()]
+        to_join.append(f": {self.note}")
         if self.duration:
             to_join.append(f" duration={self.duration}")
+
         flags = []
         if self.is_forced:
             flags.append("F")
@@ -129,22 +132,22 @@ class NoteEvent(TickEvent, DictPropertiesEqMixin):
             flags.append("T")
         if flags:
             to_join.extend([" [flags=", ''.join(flags), "]"])
-        to_join.append(')')
+
         return ''.join(to_join)
 
     def __repr__(self):  # pragma: no cover
         return str(self.__dict__)
 
 
-class StarPowerEvent(TickEvent, DictPropertiesEqMixin):
+class StarPowerEvent(Event, DictPropertiesEqMixin):
     # Match 1: Tick
     # Match 2: Note index (Might be always 2? Not sure what this is, to be honest.)
     # Match 3: Duration (ticks)
     _regex = r"^\s*?(\d+?)\s=\sS\s(\d+?)\s(\d+?)\s*?$"
     _regex_prog = re.compile(_regex)
 
-    def __init__(self, tick, duration):
-        super().__init__(tick)
+    def __init__(self, tick, duration, timestamp=None):
+        super().__init__(tick, timestamp=timestamp)
         self.duration = duration
 
     @classmethod
@@ -156,15 +159,8 @@ class StarPowerEvent(TickEvent, DictPropertiesEqMixin):
         return cls(tick, duration)
 
     def __str__(self):  # pragma: no cover
-        to_join = [f"{type(self).__name__}(t@{self.tick:07}: {self.note}"]
-        flags = []
-        if self.is_forced:
-            flags.append("F")
-        if self.is_tap:
-            flags.append("T")
-        if flags:
-            to_join.extend([" [flags=", ''.join(flags), "]"])
-        to_join.append(')')
+        to_join = [super().__str__()]
+        to_join.append(f": duration={self.duration}")
         return ''.join(to_join)
 
     def __repr__(self):  # pragma: no cover
