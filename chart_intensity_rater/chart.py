@@ -84,6 +84,8 @@ class Chart(object):
             cur_event.timestamp = prev_event.timestamp + datetime.timedelta(seconds=seconds_since_prev)
 
     def _populate_event_timestamps(self, events):
+        # A BPMEvent is "proximal" relative to another event `E` if it is the
+        # BPMEvent with the highest tick value not greater than that of `E`.
         def idx_of_proximal_bpm_event(event, start_idx=0):
             for idx in range(start_idx, len(self.sync_track.bpm_events)):
                 is_last_bpm_event = idx == len(self.sync_track.bpm_events)-1
