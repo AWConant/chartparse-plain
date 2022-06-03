@@ -1,9 +1,9 @@
-Chart Intensity Rater
+chartparse
 
 Usage
 
 ```
-python -m chart_intensity_rater
+python -m chartparse
 ```
 
 Testing
