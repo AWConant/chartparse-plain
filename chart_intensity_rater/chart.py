@@ -11,7 +11,6 @@ from chart_intensity_rater.synctrack import SyncTrack
 from chart_intensity_rater.util import iterate_from_second_elem
 
 
-# TODO: Unit test this.
 class Chart(object):
     _required_sections = ("Song", "SyncTrack")
     _instrument_track_name_to_instrument_difficulty_pair = {
