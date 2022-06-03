@@ -1,6 +1,6 @@
 import enum
 
-from chart_intensity_rater.util import AllValuesGettableEnum
+from chartparse.util import AllValuesGettableEnum
 
 
 @enum.unique

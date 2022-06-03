@@ -2,8 +2,8 @@ import pytest
 import re
 import unittest.mock
 
-from chart_intensity_rater.exceptions import RegexFatalNotMatchError
-from chart_intensity_rater.track import parse_events_from_iterable
+from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.track import parse_events_from_iterable
 
 
 def _fake_from_chart_line(_):

@@ -2,7 +2,7 @@ import pytest
 
 from enum import Enum
 
-from chart_intensity_rater.util import (
+from chartparse.util import (
         AllValuesGettableEnum, DictPropertiesEqMixin, iterate_from_second_elem)
 
 

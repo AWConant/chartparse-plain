@@ -1,4 +1,4 @@
-from chart_intensity_rater.exceptions import RegexFatalNotMatchError
+from chartparse.exceptions import RegexFatalNotMatchError
 
 
 def parse_events_from_iterable(iterable, from_chart_line_fn):

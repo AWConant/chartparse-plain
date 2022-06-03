@@ -1,6 +1,6 @@
 import pytest
 
-from chart_intensity_rater.event import Event
+from chartparse.event import Event
 
 
 class TestEvent(object):

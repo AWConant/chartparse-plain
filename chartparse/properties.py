@@ -1,8 +1,8 @@
 import inflection
 import re
 
-from chart_intensity_rater.exceptions import RegexFatalNotMatchError
-from chart_intensity_rater.util import DictPropertiesEqMixin
+from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.util import DictPropertiesEqMixin
 
 
 class Properties(DictPropertiesEqMixin):

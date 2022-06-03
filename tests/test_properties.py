@@ -1,7 +1,7 @@
 import pytest
 
-from chart_intensity_rater.exceptions import RegexFatalNotMatchError
-from chart_intensity_rater.properties import Properties
+from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.properties import Properties
 
 
 class TestProperties(object):

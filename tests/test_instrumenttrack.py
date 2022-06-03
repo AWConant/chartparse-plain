@@ -1,8 +1,8 @@
 import pytest
 
-from chart_intensity_rater.enums import Note, NoteTrackIndex
-from chart_intensity_rater.exceptions import RegexFatalNotMatchError
-from chart_intensity_rater.instrumenttrack import InstrumentTrack, NoteEvent, StarPowerEvent
+from chartparse.enums import Note, NoteTrackIndex
+from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.instrumenttrack import InstrumentTrack, NoteEvent, StarPowerEvent
 
 from tests.conftest import (
         generate_valid_note_line_fn,

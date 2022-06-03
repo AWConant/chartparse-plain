@@ -1,12 +1,12 @@
 import sys
 
-from chart_intensity_rater.chart import Chart
-from chart_intensity_rater.enums import Difficulty, Instrument
+from chartparse.chart import Chart
+from chartparse.enums import Difficulty, Instrument
 
 
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python -m chart_intensity_rater <path_to_chart_file>")
+        print("Usage: python -m chartparse <path_to_chart_file>")
         sys.exit(1)
 
     infile_name = sys.argv[1]

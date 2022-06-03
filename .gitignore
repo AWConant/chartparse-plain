@@ -5,4 +5,4 @@ __pycache__/
 
 *.chart
 
-chart_intensity_rater/nocover/
+nocover/

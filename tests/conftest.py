@@ -1,14 +1,14 @@
 import math
 import pytest
 
-from chart_intensity_rater.chart import Chart
-from chart_intensity_rater.enums import Instrument, Difficulty, Note
-from chart_intensity_rater.eventstrack import Events, EventsEvent
-from chart_intensity_rater.instrumenttrack import (
+from chartparse.chart import Chart
+from chartparse.enums import Instrument, Difficulty, Note
+from chartparse.eventstrack import Events, EventsEvent
+from chartparse.instrumenttrack import (
         InstrumentTrack, NoteEvent, StarPowerEvent, _min_note_instrument_track_index)
-from chart_intensity_rater.properties import Properties
-from chart_intensity_rater.synctrack import SyncTrack, BPMEvent, TimeSignatureEvent
-from chart_intensity_rater.event import Event
+from chartparse.properties import Properties
+from chartparse.synctrack import SyncTrack, BPMEvent, TimeSignatureEvent
+from chartparse.event import Event
 
 _default_filepath = "/not/a/real/path"
 
@@ -246,7 +246,7 @@ def basic_properties():
 @pytest.fixture
 def basic_events_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
-            'chart_intensity_rater.track.parse_events_from_iterable',
+            'chartparse.track.parse_events_from_iterable',
             return_value=_default_events_event_list)
     return Events(placeholder_string_iterator_getter)
 
@@ -254,7 +254,7 @@ def basic_events_track(mocker, placeholder_string_iterator_getter):
 @pytest.fixture
 def basic_sync_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
-            'chart_intensity_rater.track.parse_events_from_iterable',
+            'chartparse.track.parse_events_from_iterable',
             side_effect=[_default_time_signature_event_list, _default_bpm_event_list])
     return SyncTrack(placeholder_string_iterator_getter)
 
@@ -262,10 +262,10 @@ def basic_sync_track(mocker, placeholder_string_iterator_getter):
 @pytest.fixture
 def basic_instrument_track(mocker, placeholder_string_iterator_getter):
     mocker.patch(
-            'chart_intensity_rater.instrumenttrack.InstrumentTrack._parse_note_events_from_iterable',
+            'chartparse.instrumenttrack.InstrumentTrack._parse_note_events_from_iterable',
             return_value=pytest.default_note_event_list)
     mocker.patch(
-            'chart_intensity_rater.track.parse_events_from_iterable',
+            'chartparse.track.parse_events_from_iterable',
             return_value=_default_star_power_event_list)
     return InstrumentTrack(
             pytest.default_instrument, pytest.default_difficulty, placeholder_string_iterator_getter)
@@ -292,14 +292,14 @@ def basic_chart(
     mocker.patch.object(InstrumentTrack, "__init__", fake_instrument_track_init)
 
     mocker.patch(
-            'chart_intensity_rater.chart.Chart._find_sections',
+            'chartparse.chart.Chart._find_sections',
             return_value={
                 "Song": placeholder_string_iterator_getter,
                 "Events": placeholder_string_iterator_getter,
                 "SyncTrack": placeholder_string_iterator_getter,
                 "ExpertSingle": placeholder_string_iterator_getter})
     mocker.patch(
-            'chart_intensity_rater.properties.Properties.from_chart_lines',
+            'chartparse.properties.Properties.from_chart_lines',
             return_value=basic_properties)
     with open(_default_filepath, "r") as f:
         return Chart(f)

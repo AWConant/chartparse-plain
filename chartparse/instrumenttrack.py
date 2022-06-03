@@ -1,12 +1,12 @@
 import collections
 import re
 
-import chart_intensity_rater.track
+import chartparse.track
 
-from chart_intensity_rater.enums import Note
-from chart_intensity_rater.exceptions import RegexFatalNotMatchError
-from chart_intensity_rater.event import Event
-from chart_intensity_rater.util import DictPropertiesEqMixin
+from chartparse.enums import Note
+from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.event import Event
+from chartparse.util import DictPropertiesEqMixin
 
 
 _min_note_instrument_track_index = 0
@@ -21,7 +21,7 @@ class InstrumentTrack(DictPropertiesEqMixin):
         self.instrument = instrument
         self.difficulty = difficulty
         self.note_events = self._parse_note_events_from_iterable(iterator_getter())
-        self.star_power_events = chart_intensity_rater.track.parse_events_from_iterable(
+        self.star_power_events = chartparse.track.parse_events_from_iterable(
                 iterator_getter(), StarPowerEvent.from_chart_line)
 
     def __str__(self):  # pragma: no cover

@@ -2,8 +2,8 @@ import datetime
 import pathlib
 import pytest
 
-from chart_intensity_rater.chart import Chart
-from chart_intensity_rater.enums import Difficulty, Instrument
+from chartparse.chart import Chart
+from chartparse.enums import Difficulty, Instrument
 
 
 _directory_of_this_file = pathlib.Path(__file__).parent.resolve()

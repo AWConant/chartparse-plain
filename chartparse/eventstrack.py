@@ -1,15 +1,15 @@
 import re
 
-import chart_intensity_rater.track
+import chartparse.track
 
-from chart_intensity_rater.exceptions import RegexFatalNotMatchError
-from chart_intensity_rater.event import Event
-from chart_intensity_rater.util import DictPropertiesEqMixin
+from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.event import Event
+from chartparse.util import DictPropertiesEqMixin
 
 
 class Events(DictPropertiesEqMixin):
     def __init__(self, iterator_getter):
-        self.events = chart_intensity_rater.track.parse_events_from_iterable(
+        self.events = chartparse.track.parse_events_from_iterable(
                 iterator_getter(), EventsEvent.from_chart_line)
 
 

@@ -1,7 +1,7 @@
 import pytest
 
-from chart_intensity_rater.eventstrack import Events, EventsEvent
-from chart_intensity_rater.exceptions import RegexFatalNotMatchError
+from chartparse.eventstrack import Events, EventsEvent
+from chartparse.exceptions import RegexFatalNotMatchError
 
 
 class TestEvents(object):

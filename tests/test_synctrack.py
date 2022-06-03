@@ -1,7 +1,7 @@
 import pytest
 
-from chart_intensity_rater.exceptions import RegexFatalNotMatchError
-from chart_intensity_rater.synctrack import BPMEvent, TimeSignatureEvent, SyncTrack
+from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.synctrack import BPMEvent, TimeSignatureEvent, SyncTrack
 
 
 
@@ -12,7 +12,7 @@ class TestSyncTrack(object):
 
     def test_init_missing_first_time_signature_event(self, mocker, placeholder_string_iterator_getter):
         mocker.patch(
-                'chart_intensity_rater.synctrack.chart_intensity_rater.track.parse_events_from_iterable',
+                'chartparse.synctrack.chartparse.track.parse_events_from_iterable',
                 return_value=[
                     TimeSignatureEvent(
                         1, pytest.default_upper_time_signature_numeral,
@@ -30,7 +30,7 @@ class TestSyncTrack(object):
             else:
                 raise ValueError(f"event_type {event_type} not handled")
         mocker.patch(
-                'chart_intensity_rater.synctrack.chart_intensity_rater.track.parse_events_from_iterable',
+                'chartparse.synctrack.chartparse.track.parse_events_from_iterable',
                 side_effect=fake_parse_events_from_iterable)
         with pytest.raises(ValueError):
             _ = SyncTrack(placeholder_string_iterator_getter)

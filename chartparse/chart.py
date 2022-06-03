@@ -3,12 +3,12 @@ import datetime
 import itertools
 import re
 
-from chart_intensity_rater.enums import Difficulty, Instrument
-from chart_intensity_rater.eventstrack import Events
-from chart_intensity_rater.instrumenttrack import InstrumentTrack
-from chart_intensity_rater.properties import Properties
-from chart_intensity_rater.synctrack import SyncTrack
-from chart_intensity_rater.util import iterate_from_second_elem
+from chartparse.enums import Difficulty, Instrument
+from chartparse.eventstrack import Events
+from chartparse.instrumenttrack import InstrumentTrack
+from chartparse.properties import Properties
+from chartparse.synctrack import SyncTrack
+from chartparse.util import iterate_from_second_elem
 
 
 class Chart(object):

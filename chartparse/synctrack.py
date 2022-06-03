@@ -1,21 +1,21 @@
 import re
 
-import chart_intensity_rater.event
-import chart_intensity_rater.track
+import chartparse.event
+import chartparse.track
 
-from chart_intensity_rater.exceptions import RegexFatalNotMatchError
-from chart_intensity_rater.event import Event
-from chart_intensity_rater.util import DictPropertiesEqMixin
+from chartparse.exceptions import RegexFatalNotMatchError
+from chartparse.event import Event
+from chartparse.util import DictPropertiesEqMixin
 
 
 class SyncTrack(DictPropertiesEqMixin):
     def __init__(self, iterator_getter):
-        self.time_signature_events = chart_intensity_rater.track.parse_events_from_iterable(
+        self.time_signature_events = chartparse.track.parse_events_from_iterable(
                 iterator_getter(), TimeSignatureEvent.from_chart_line)
         if self.time_signature_events[0].tick != 0:
             raise ValueError(f"first TimeSignatureEvent {self.time_signature_events[0]} must have tick 0")
 
-        self.bpm_events = chart_intensity_rater.track.parse_events_from_iterable(
+        self.bpm_events = chartparse.track.parse_events_from_iterable(
                 iterator_getter(), BPMEvent.from_chart_line)
         if self.bpm_events[0].tick != 0:
             raise ValueError(f"first BPMEvent {self.bpm_events[0]} must have tick 0")
